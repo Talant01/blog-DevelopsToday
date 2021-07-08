@@ -2,6 +2,8 @@ import React from 'react'
 import axios from 'axios'
 import { GetStaticProps } from 'next'
 import { ParsedUrlQuery } from 'querystring'
+import DefaultErrorPage from 'next/error'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
 import blog from '../../public/blog.jpeg'
@@ -57,7 +59,16 @@ const Post: React.FC<IProps> = ({ post }): JSX.Element => {
     if (router.isFallback) {
         return <Layout title="Post | My blog">Loading...</Layout>
     }
-
+    if (!post) {
+        return (
+            <>
+                <Head>
+                    <meta name="robots" content="noindex" />
+                </Head>
+                <DefaultErrorPage statusCode={404} />
+            </>
+        )
+    }
     return (
         <Layout title="Post | My blog">
             <Container>
@@ -79,13 +90,12 @@ export async function getStaticPaths() {
         params: { id: post.id.toString() },
     }))
 
-    return { paths, fallback: false }
+    return { paths, fallback: true }
 }
 
 export const getStaticProps: GetStaticProps<Props, Params> = async (context) => {
     const params = context.params!
     const { data } = await axios.get(`https://simple-blog-api.crew.red/posts/${params.id}?_embed=comments`)
-    console.log(params.id)
 
     return {
         props: {
